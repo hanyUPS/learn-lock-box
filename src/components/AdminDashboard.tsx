@@ -5,7 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Video, Upload, Shield } from 'lucide-react';
+import { Users, Video, Upload, Shield, Settings, CheckCircle } from 'lucide-react';
+import VideoUpload from '@/components/VideoUpload';
+import VideoManagement from '@/components/VideoManagement';
 
 interface Profile {
   id: string;
@@ -30,6 +32,7 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState<Profile[]>([]);
   const [videos, setVideos] = useState<VideoRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -114,6 +117,11 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleUploadComplete = () => {
+    setRefreshTrigger(prev => prev + 1);
+    fetchVideos(); // Refresh videos list
+  };
+
   const toggleVideoStatus = async (videoId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'ready' ? 'disabled' : 'ready';
     
@@ -178,8 +186,8 @@ const AdminDashboard = () => {
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Videos</CardTitle>
-            <Upload className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Ready Videos</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -190,10 +198,19 @@ const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="users" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="users">User Management</TabsTrigger>
-          <TabsTrigger value="videos">Video Management</TabsTrigger>
-          <TabsTrigger value="upload">Upload Videos</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            User Management
+          </TabsTrigger>
+          <TabsTrigger value="upload" className="flex items-center gap-2">
+            <Upload className="h-4 w-4" />
+            Upload Videos
+          </TabsTrigger>
+          <TabsTrigger value="manage" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            Manage Videos
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="users" className="space-y-4">
@@ -246,59 +263,12 @@ const AdminDashboard = () => {
           </Card>
         </TabsContent>
         
-        <TabsContent value="videos" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Video Management</CardTitle>
-              <CardDescription>
-                Manage your video library and control availability
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {videos.map((video) => (
-                  <div key={video.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="space-y-1">
-                      <p className="font-medium">{video.title}</p>
-                      <p className="text-sm text-muted-foreground">{video.description}</p>
-                      <Badge variant={video.status === 'ready' ? 'default' : 'secondary'}>
-                        {video.status}
-                      </Badge>
-                    </div>
-                    <Button
-                      onClick={() => toggleVideoStatus(video.id, video.status)}
-                      variant={video.status === 'ready' ? 'outline' : 'default'}
-                      size="sm"
-                    >
-                      {video.status === 'ready' ? 'Disable' : 'Enable'}
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
         <TabsContent value="upload" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Upload Videos</CardTitle>
-              <CardDescription>
-                Upload new videos to the platform (Feature coming soon)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Video upload functionality will be implemented next. This will allow you to:
-              </p>
-              <ul className="list-disc list-inside mt-2 space-y-1 text-sm text-muted-foreground">
-                <li>Upload video files directly to Supabase Storage</li>
-                <li>Automatically register videos in the database</li>
-                <li>Generate thumbnails for video previews</li>
-                <li>Set video metadata like title and description</li>
-              </ul>
-            </CardContent>
-          </Card>
+          <VideoUpload onUploadComplete={handleUploadComplete} />
+        </TabsContent>
+
+        <TabsContent value="manage" className="space-y-4">
+          <VideoManagement refreshTrigger={refreshTrigger} />
         </TabsContent>
       </Tabs>
     </div>

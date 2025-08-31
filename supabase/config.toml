@@ -1,1 +1,36 @@
 project_id = "uucyuqqpdfopzpnsdetx"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+port = 54324
+external_url = "https://uucyuqqpdfopzpnsdetx.supabase.co"
+additional_redirect_urls = []
+jwt_expiry = 3600
+enable_manual_linking = false
+enable_signup = true
+enable_confirmations = true
+enable_anonymous_sign_ins = false
+minimum_password_length = 6
+password_requirements = "letters_digits"
+external_email_enabled = true
+external_phone_enabled = false
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[functions.process-video-upload]
+verify_jwt = true
+
+[storage]
+enabled = true
+port = 54325
+file_size_limit = "50MiB"
