@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Play, Video, Clock } from 'lucide-react';
+import { ArrowLeft, Play, Video, Clock, Pause, Square, SkipBack, SkipForward, Settings } from 'lucide-react';
 
 interface VideoRecord {
   id: string;
@@ -25,6 +25,11 @@ const VideoPlayer = () => {
   const [video, setVideo] = useState<VideoRecord | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -93,6 +98,67 @@ const VideoPlayer = () => {
     });
   };
 
+  const handlePlayPause = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleStop = () => {
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+      setIsPlaying(false);
+      setCurrentTime(0);
+    }
+  };
+
+  const handleSeekBackward = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.max(0, videoRef.current.currentTime - 10);
+    }
+  };
+
+  const handleSeekForward = () => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = Math.min(duration, videoRef.current.currentTime + 10);
+    }
+  };
+
+  const handleSpeedChange = () => {
+    if (videoRef.current) {
+      const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+      const currentIndex = speeds.indexOf(playbackRate);
+      const nextIndex = (currentIndex + 1) % speeds.length;
+      const newSpeed = speeds[nextIndex];
+      videoRef.current.playbackRate = newSpeed;
+      setPlaybackRate(newSpeed);
+    }
+  };
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime);
+    }
+  };
+
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+    }
+  };
+
+  const formatTime = (time: number) => {
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -156,25 +222,18 @@ const VideoPlayer = () => {
             <Card className="overflow-hidden">
               <div className="aspect-video bg-black relative">
                 <video
+                  ref={videoRef}
                   src={videoUrl}
-                  controls={profile?.role === 'admin'}
-                  controlsList={profile?.role === 'student' ? 'nodownload' : undefined}
+                  controls={false}
                   className="w-full h-full"
                   poster="/placeholder.svg"
                   preload="metadata"
-                  onContextMenu={(e) => {
-                    if (profile?.role === 'student') {
-                      e.preventDefault();
-                    }
-                  }}
+                  onTimeUpdate={handleTimeUpdate}
+                  onLoadedMetadata={handleLoadedMetadata}
+                  onContextMenu={(e) => e.preventDefault()}
                 >
                   <p className="text-white p-4">
                     Your browser doesn't support HTML5 video.
-                    {profile?.role === 'admin' && (
-                      <a href={videoUrl} className="underline ml-1">
-                        Download the video instead.
-                      </a>
-                    )}
                   </p>
                 </video>
                 <div className="absolute top-4 right-4">
@@ -182,6 +241,72 @@ const VideoPlayer = () => {
                     <Play className="h-3 w-3 mr-1" />
                     HD Quality
                   </Badge>
+                </div>
+              </div>
+              
+              {/* Custom Video Controls */}
+              <div className="p-4 bg-card border-t">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm text-muted-foreground">
+                    {formatTime(currentTime)} / {formatTime(duration)}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    Speed: {playbackRate}x
+                  </span>
+                </div>
+                
+                <div className="w-full bg-secondary rounded-full h-2 mb-4">
+                  <div 
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%` }}
+                  />
+                </div>
+                
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleSeekBackward}
+                    className="h-10 w-10"
+                  >
+                    <SkipBack className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePlayPause}
+                    className="h-10 w-10"
+                  >
+                    {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleStop}
+                    className="h-10 w-10"
+                  >
+                    <Square className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleSeekForward}
+                    className="h-10 w-10"
+                  >
+                    <SkipForward className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleSpeedChange}
+                    className="h-10 w-10"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </Card>
@@ -231,19 +356,15 @@ const VideoPlayer = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Playback Options</CardTitle>
+                <CardTitle className="text-sm">Control Guide</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <p>• Use spacebar to play/pause</p>
-                  <p>• Use arrow keys to seek</p>
-                  <p>• Press F for fullscreen</p>
-                  {profile?.role === 'student' && (
-                    <p className="text-orange-600">• Download disabled for students</p>
-                  )}
-                  {profile?.role === 'admin' && (
-                    <p>• Right-click for more options</p>
-                  )}
+                  <p>• Click play/pause button to control playback</p>
+                  <p>• Use stop button to reset video</p>
+                  <p>• Skip buttons jump 10 seconds</p>
+                  <p>• Speed button cycles through playback rates</p>
+                  <p className="text-green-600">• Secure playback - download disabled</p>
                 </div>
                 
                 <Button 
@@ -251,10 +372,9 @@ const VideoPlayer = () => {
                   size="sm" 
                   className="w-full"
                   onClick={() => {
-                    const video = document.querySelector('video');
-                    if (video) {
-                      if (video.requestFullscreen) {
-                        video.requestFullscreen();
+                    if (videoRef.current) {
+                      if (videoRef.current.requestFullscreen) {
+                        videoRef.current.requestFullscreen();
                       }
                     }
                   }}
