@@ -157,16 +157,24 @@ const VideoPlayer = () => {
               <div className="aspect-video bg-black relative">
                 <video
                   src={videoUrl}
-                  controls
+                  controls={profile?.role === 'admin'}
+                  controlsList={profile?.role === 'student' ? 'nodownload' : undefined}
                   className="w-full h-full"
                   poster="/placeholder.svg"
                   preload="metadata"
+                  onContextMenu={(e) => {
+                    if (profile?.role === 'student') {
+                      e.preventDefault();
+                    }
+                  }}
                 >
                   <p className="text-white p-4">
-                    Your browser doesn't support HTML5 video. 
-                    <a href={videoUrl} className="underline ml-1">
-                      Download the video instead.
-                    </a>
+                    Your browser doesn't support HTML5 video.
+                    {profile?.role === 'admin' && (
+                      <a href={videoUrl} className="underline ml-1">
+                        Download the video instead.
+                      </a>
+                    )}
                   </p>
                 </video>
                 <div className="absolute top-4 right-4">
@@ -230,7 +238,12 @@ const VideoPlayer = () => {
                   <p>• Use spacebar to play/pause</p>
                   <p>• Use arrow keys to seek</p>
                   <p>• Press F for fullscreen</p>
-                  <p>• Right-click for more options</p>
+                  {profile?.role === 'student' && (
+                    <p className="text-orange-600">• Download disabled for students</p>
+                  )}
+                  {profile?.role === 'admin' && (
+                    <p>• Right-click for more options</p>
+                  )}
                 </div>
                 
                 <Button 
