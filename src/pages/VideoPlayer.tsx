@@ -356,32 +356,17 @@ const VideoPlayer = () => {
 
             <Card className="card-shadow">
               <CardHeader>
-                <CardTitle className="text-sm text-primary">دليل التحكم</CardTitle>
+                <CardTitle className="text-sm text-primary"> معلومات عن الاكاديمة</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <p>• اضغط زر التشغيل/الإيقاف للتحكم في التشغيل</p>
-                  <p>• استخدم زر الإيقاف لإعادة تعيين الفيديو</p>
-                  <p>• أزرار التخطي تقفز 10 ثوانِ</p>
-                  <p>• زر السرعة يغير معدل التشغيل</p>
-                  <p className="text-primary font-medium">• تشغيل آمن - التحميل معطل</p>
+                  <p>•  الاكاديمةالاولى فى الصعيد المتخصصة فى الذكاء الصناعى والبرمجة </p>
+                  <p>•  جميع الحقوق محفوظة 2025 ©</p>
+                  <p>•  Designed by <a href="https://www.facebook.com/UPSJuniors" className="text-primary underline">UPS Juniors</a></p>  
+                  <p className="text-primary font-medium"> للتواصل 01204262410</p>
                 </div>
                 
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="w-full hover-lift"
-                  onClick={() => {
-                    if (videoRef.current) {
-                      if (videoRef.current.requestFullscreen) {
-                        videoRef.current.requestFullscreen();
-                      }
-                    }
-                  }}
-                >
-                  <Play className="h-3 w-3 ml-2" />
-                  وضع الشاشة الكاملة
-                </Button>
+                
               </CardContent>
             </Card>
           </div>
