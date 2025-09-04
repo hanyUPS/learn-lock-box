@@ -15,10 +15,10 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center hero-gradient">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Loading...</h1>
-          <p className="text-muted-foreground">Please wait while we authenticate you.</p>
+          <h1 className="text-3xl font-bold mb-4 text-primary">جاري التحميل...</h1>
+          <p className="text-foreground">يرجى الانتظار أثناء المصادقة على هويتك.</p>
         </div>
       </div>
     );

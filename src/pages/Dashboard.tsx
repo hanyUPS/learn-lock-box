@@ -14,10 +14,10 @@ const Dashboard = () => {
   if (!profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md card-shadow">
           <CardHeader className="text-center">
-            <CardTitle>Loading...</CardTitle>
-            <CardDescription>Please wait while we load your profile.</CardDescription>
+            <CardTitle>جاري التحميل...</CardTitle>
+            <CardDescription>يرجى الانتظار أثناء تحميل ملفك الشخصي.</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -26,17 +26,17 @@ const Dashboard = () => {
 
   if (!profile.approved && profile.role === 'student') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center hero-gradient p-4">
+        <Card className="w-full max-w-md card-shadow">
           <CardHeader className="text-center">
-            <CardTitle>Pending Approval</CardTitle>
-            <CardDescription>
-              Your account is pending admin approval. Please wait for an administrator to approve your access.
+            <CardTitle className="text-xl text-primary">في انتظار الموافقة</CardTitle>
+            <CardDescription className="text-base">
+              حسابك في انتظار موافقة المسؤول. يرجى الانتظار لحين موافقة المسؤول على دخولك للمنصة.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Button onClick={handleSignOut} variant="outline">
-              Sign Out
+            <Button onClick={handleSignOut} variant="outline" className="hover-lift">
+              تسجيل الخروج
             </Button>
           </CardContent>
         </Card>
@@ -46,15 +46,18 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
+      <header className="bg-card border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Video Learning Platform</h1>
+          <h1 className="text-2xl font-bold text-primary">منصة التعلم الآمنة</h1>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              {profile.email} ({profile.role})
-            </span>
-            <Button onClick={handleSignOut} variant="outline" size="sm">
-              Sign Out
+            <div className="text-left">
+              <span className="text-sm font-medium text-foreground block">{profile.email}</span>
+              <span className="text-xs text-muted-foreground">
+                {profile.role === 'admin' ? 'مسؤول' : 'طالب'}
+              </span>
+            </div>
+            <Button onClick={handleSignOut} variant="outline" size="sm" className="hover-lift">
+              تسجيل الخروج
             </Button>
           </div>
         </div>

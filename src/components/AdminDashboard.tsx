@@ -48,8 +48,8 @@ const AdminDashboard = () => {
 
     if (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to fetch users',
+        title: 'خطأ',
+        description: 'فشل في تحميل المستخدمين',
         variant: 'destructive',
       });
     } else {
@@ -66,8 +66,8 @@ const AdminDashboard = () => {
 
     if (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to fetch videos',
+        title: 'خطأ',
+        description: 'فشل في تحميل الفيديوهات',
         variant: 'destructive',
       });
     } else {
@@ -83,14 +83,14 @@ const AdminDashboard = () => {
 
     if (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to approve user',
+        title: 'خطأ',
+        description: 'فشل في الموافقة على المستخدم',
         variant: 'destructive',
       });
     } else {
       toast({
-        title: 'Success',
-        description: 'User approved successfully',
+        title: 'نجح',
+        description: 'تم قبول المستخدم بنجاح',
       });
       fetchUsers();
     }
@@ -104,14 +104,14 @@ const AdminDashboard = () => {
 
     if (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to reject user',
+        title: 'خطأ',
+        description: 'فشل في رفض المستخدم',
         variant: 'destructive',
       });
     } else {
       toast({
-        title: 'Success',
-        description: 'User access revoked',
+        title: 'نجح',
+        description: 'تم إلغاء وصول المستخدم',
       });
       fetchUsers();
     }
@@ -132,65 +132,65 @@ const AdminDashboard = () => {
 
     if (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to update video status',
+        title: 'خطأ',
+        description: 'فشل في تحديث حالة الفيديو',
         variant: 'destructive',
       });
     } else {
       toast({
-        title: 'Success',
-        description: `Video ${newStatus}`,
+        title: 'نجح',
+        description: `الفيديو ${newStatus === 'ready' ? 'جاهز' : 'معطل'}`,
       });
       fetchVideos();
     }
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="text-center">جاري التحميل...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="card-shadow hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">إجمالي المستخدمين</CardTitle>
+            <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
+            <div className="text-2xl font-bold text-primary">{users.length}</div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="card-shadow hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Approvals</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">في انتظار الموافقة</CardTitle>
+            <Shield className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-primary">
               {users.filter(u => !u.approved && u.role === 'student').length}
             </div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="card-shadow hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Videos</CardTitle>
-            <Video className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">إجمالي الفيديوهات</CardTitle>
+            <Video className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{videos.length}</div>
+            <div className="text-2xl font-bold text-primary">{videos.length}</div>
           </CardContent>
         </Card>
         
-        <Card>
+        <Card className="card-shadow hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ready Videos</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">الفيديوهات الجاهزة</CardTitle>
+            <CheckCircle className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-primary">
               {videos.filter(v => v.status === 'ready').length}
             </div>
           </CardContent>
@@ -201,24 +201,24 @@ const AdminDashboard = () => {
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            User Management
+            إدارة المستخدمين
           </TabsTrigger>
           <TabsTrigger value="upload" className="flex items-center gap-2">
             <Upload className="h-4 w-4" />
-            Upload Videos
+            رفع فيديوهات
           </TabsTrigger>
           <TabsTrigger value="manage" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Manage Videos
+            إدارة الفيديوهات
           </TabsTrigger>
         </TabsList>
         
         <TabsContent value="users" className="space-y-4">
-          <Card>
+          <Card className="card-shadow">
             <CardHeader>
-              <CardTitle>User Management</CardTitle>
+              <CardTitle>إدارة المستخدمين</CardTitle>
               <CardDescription>
-                Approve or reject user access to the platform
+                موافقة أو رفض وصول المستخدمين للمنصة
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -229,10 +229,10 @@ const AdminDashboard = () => {
                       <p className="font-medium">{user.email}</p>
                       <div className="flex items-center gap-2">
                         <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
-                          {user.role}
+                          {user.role === 'admin' ? 'مسؤول' : 'طالب'}
                         </Badge>
                         <Badge variant={user.approved ? 'default' : 'outline'}>
-                          {user.approved ? 'Approved' : 'Pending'}
+                          {user.approved ? 'معتمد' : 'في الانتظار'}
                         </Badge>
                       </div>
                     </div>
@@ -242,16 +242,18 @@ const AdminDashboard = () => {
                           <Button
                             onClick={() => approveUser(user.user_id)}
                             size="sm"
+                            className="hover-lift"
                           >
-                            Approve
+                            موافقة
                           </Button>
                         ) : (
                           <Button
                             onClick={() => rejectUser(user.user_id)}
                             variant="outline"
                             size="sm"
+                            className="hover-lift"
                           >
-                            Revoke Access
+                            إلغاء الوصول
                           </Button>
                         )}
                       </div>

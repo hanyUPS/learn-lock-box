@@ -73,8 +73,8 @@ const VideoPlayer = () => {
     } catch (error: any) {
       console.error('Error fetching video:', error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to load video',
+        title: 'خطأ',
+        description: error.message || 'فشل في تحميل الفيديو',
         variant: 'destructive',
       });
       navigate('/');
@@ -84,14 +84,14 @@ const VideoPlayer = () => {
   };
 
   const formatDuration = (seconds: number | null) => {
-    if (!seconds) return 'Unknown';
+    if (!seconds) return 'غير محدد';
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('ar-SA', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -161,11 +161,11 @@ const VideoPlayer = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center hero-gradient">
         <div className="text-center">
-          <Video className="h-12 w-12 mx-auto mb-4 text-muted-foreground animate-pulse" />
-          <h1 className="text-xl font-semibold mb-2">Loading video...</h1>
-          <p className="text-muted-foreground">Please wait while we prepare your content.</p>
+          <Video className="h-16 w-16 mx-auto mb-4 text-primary animate-pulse" />
+          <h1 className="text-2xl font-semibold mb-2 text-primary">جاري تحميل الفيديو...</h1>
+          <p className="text-foreground">يرجى الانتظار أثناء تحضير المحتوى.</p>
         </div>
       </div>
     );
@@ -173,18 +173,18 @@ const VideoPlayer = () => {
 
   if (!video || !videoUrl) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center hero-gradient p-4">
+        <Card className="w-full max-w-md card-shadow">
           <CardHeader className="text-center">
-            <CardTitle>Video not available</CardTitle>
+            <CardTitle className="text-primary">الفيديو غير متاح</CardTitle>
             <CardDescription>
-              The requested video could not be found or is not ready for viewing.
+              لم يتم العثور على الفيديو المطلوب أو أنه غير جاهز للعرض.
             </CardDescription>
           </CardHeader>
           <CardContent className="text-center">
-            <Button onClick={() => navigate('/')} variant="outline">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+            <Button onClick={() => navigate('/')} variant="outline" className="hover-lift">
+              <ArrowLeft className="h-4 w-4 ml-2" />
+              العودة للوحة الإدارة
             </Button>
           </CardContent>
         </Card>
@@ -194,22 +194,22 @@ const VideoPlayer = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b bg-card">
+      <header className="bg-card border-b shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate('/')}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 hover-lift"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            العودة للوحة الإدارة
           </Button>
           <div className="flex-1">
-            <h1 className="text-lg font-semibold">{video.title}</h1>
+            <h1 className="text-lg font-semibold text-primary">{video.title}</h1>
             {profile && (
               <p className="text-sm text-muted-foreground">
-                Watching as {profile.email}
+                يشاهد: {profile.email}
               </p>
             )}
           </div>
@@ -219,7 +219,7 @@ const VideoPlayer = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-3">
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden card-shadow">
               <div className="aspect-video bg-black relative">
                 <video
                   ref={videoRef}
@@ -233,13 +233,13 @@ const VideoPlayer = () => {
                   onContextMenu={(e) => e.preventDefault()}
                 >
                   <p className="text-white p-4">
-                    Your browser doesn't support HTML5 video.
+                    متصفحك لا يدعم تشغيل HTML5 للفيديو.
                   </p>
                 </video>
-                <div className="absolute top-4 right-4">
+                <div className="absolute top-4 left-4">
                   <Badge variant="secondary" className="bg-black/50 text-white border-white/20">
-                    <Play className="h-3 w-3 mr-1" />
-                    HD Quality
+                    <Play className="h-3 w-3 ml-1" />
+                    جودة عالية
                   </Badge>
                 </div>
               </div>
@@ -251,7 +251,7 @@ const VideoPlayer = () => {
                     {formatTime(currentTime)} / {formatTime(duration)}
                   </span>
                   <span className="text-sm text-muted-foreground">
-                    Speed: {playbackRate}x
+                    السرعة: {playbackRate}x
                   </span>
                 </div>
                 
@@ -267,7 +267,7 @@ const VideoPlayer = () => {
                     variant="outline"
                     size="icon"
                     onClick={handleSeekBackward}
-                    className="h-10 w-10"
+                    className="h-10 w-10 hover-lift"
                   >
                     <SkipBack className="h-4 w-4" />
                   </Button>
@@ -276,7 +276,7 @@ const VideoPlayer = () => {
                     variant="outline"
                     size="icon"
                     onClick={handlePlayPause}
-                    className="h-10 w-10"
+                    className="h-10 w-10 hover-lift"
                   >
                     {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                   </Button>
@@ -285,7 +285,7 @@ const VideoPlayer = () => {
                     variant="outline"
                     size="icon"
                     onClick={handleStop}
-                    className="h-10 w-10"
+                    className="h-10 w-10 hover-lift"
                   >
                     <Square className="h-4 w-4" />
                   </Button>
@@ -294,7 +294,7 @@ const VideoPlayer = () => {
                     variant="outline"
                     size="icon"
                     onClick={handleSeekForward}
-                    className="h-10 w-10"
+                    className="h-10 w-10 hover-lift"
                   >
                     <SkipForward className="h-4 w-4" />
                   </Button>
@@ -303,7 +303,7 @@ const VideoPlayer = () => {
                     variant="outline"
                     size="icon"
                     onClick={handleSpeedChange}
-                    className="h-10 w-10"
+                    className="h-10 w-10 hover-lift"
                   >
                     <Settings className="h-4 w-4" />
                   </Button>
@@ -313,11 +313,11 @@ const VideoPlayer = () => {
           </div>
 
           <div className="lg:col-span-1 space-y-6">
-            <Card>
+            <Card className="card-shadow">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-primary">
                   <Video className="h-5 w-5" />
-                  Video Details
+                  تفاصيل الفيديو
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -332,7 +332,7 @@ const VideoPlayer = () => {
 
                 <div className="space-y-3 pt-4 border-t">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Duration</span>
+                    <span className="text-muted-foreground">المدة</span>
                     <div className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       {formatDuration(video.duration_seconds)}
@@ -340,37 +340,37 @@ const VideoPlayer = () => {
                   </div>
                   
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Status</span>
-                    <Badge variant="outline" className="capitalize">
-                      {video.status}
+                    <span className="text-muted-foreground">الحالة</span>
+                    <Badge variant="secondary" className="capitalize bg-accent text-accent-foreground">
+                      {video.status === 'ready' ? 'جاهز' : video.status}
                     </Badge>
                   </div>
                   
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Published</span>
+                    <span className="text-muted-foreground">تاريخ النشر</span>
                     <span>{formatDate(video.created_at)}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="card-shadow">
               <CardHeader>
-                <CardTitle className="text-sm">Control Guide</CardTitle>
+                <CardTitle className="text-sm text-primary">دليل التحكم</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <p>• Click play/pause button to control playback</p>
-                  <p>• Use stop button to reset video</p>
-                  <p>• Skip buttons jump 10 seconds</p>
-                  <p>• Speed button cycles through playback rates</p>
-                  <p className="text-green-600">• Secure playback - download disabled</p>
+                  <p>• اضغط زر التشغيل/الإيقاف للتحكم في التشغيل</p>
+                  <p>• استخدم زر الإيقاف لإعادة تعيين الفيديو</p>
+                  <p>• أزرار التخطي تقفز 10 ثوانِ</p>
+                  <p>• زر السرعة يغير معدل التشغيل</p>
+                  <p className="text-primary font-medium">• تشغيل آمن - التحميل معطل</p>
                 </div>
                 
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="w-full"
+                  className="w-full hover-lift"
                   onClick={() => {
                     if (videoRef.current) {
                       if (videoRef.current.requestFullscreen) {
@@ -379,8 +379,8 @@ const VideoPlayer = () => {
                     }
                   }}
                 >
-                  <Play className="h-3 w-3 mr-2" />
-                  Fullscreen Mode
+                  <Play className="h-3 w-3 ml-2" />
+                  وضع الشاشة الكاملة
                 </Button>
               </CardContent>
             </Card>

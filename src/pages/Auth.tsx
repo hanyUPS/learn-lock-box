@@ -31,14 +31,14 @@ const Auth = () => {
 
     if (error) {
       toast({
-        title: 'Error',
+        title: 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
     } else {
       toast({
-        title: 'Success',
-        description: 'Signed in successfully!',
+        title: 'نجح الدخول',
+        description: 'تم تسجيل الدخول بنجاح!',
       });
       navigate('/');
     }
@@ -54,14 +54,14 @@ const Auth = () => {
 
     if (error) {
       toast({
-        title: 'Error',
+        title: 'خطأ',
         description: error.message,
         variant: 'destructive',
       });
     } else {
       toast({
-        title: 'Success',
-        description: 'Account created! Please check your email for verification.',
+        title: 'تم إنشاء الحساب',
+        description: 'تم إنشاء الحساب بنجاح! تحقق من بريدك الإلكتروني للتفعيل.',
       });
     }
 
@@ -69,47 +69,47 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center hero-gradient p-4">
+      <Card className="w-full max-w-md card-shadow">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Video Learning Platform</CardTitle>
-          <CardDescription>
-            Sign in to access your secure video library
+          <CardTitle className="text-3xl font-bold text-primary mb-2">منصة التعلم الآمنة</CardTitle>
+          <CardDescription className="text-base">
+            سجل دخولك للوصول إلى مكتبة الفيديوهات الآمنة
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="signin">تسجيل الدخول</TabsTrigger>
+              <TabsTrigger value="signup">إنشاء حساب</TabsTrigger>
             </TabsList>
             
             <TabsContent value="signin">
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">البريد الإلكتروني</Label>
                   <Input
                     id="email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder="أدخل بريدك الإلكتروني"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">كلمة المرور</Label>
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder="أدخل كلمة المرور"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Signing In...' : 'Sign In'}
+                  {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
                 </Button>
               </form>
             </TabsContent>
@@ -117,32 +117,32 @@ const Auth = () => {
             <TabsContent value="signup">
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email">البريد الإلكتروني</Label>
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder="أدخل بريدك الإلكتروني"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                  <Label htmlFor="signup-password">كلمة المرور</Label>
                   <Input
                     id="signup-password"
                     type="password"
-                    placeholder="Create a password"
+                    placeholder="أنشئ كلمة مرور قوية"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Creating Account...' : 'Sign Up'}
+                  {loading ? 'جاري إنشاء الحساب...' : 'إنشاء حساب جديد'}
                 </Button>
                 <p className="text-sm text-muted-foreground text-center">
-                  Your account will need admin approval before you can access videos.
+                  سيحتاج حسابك لموافقة المسؤول قبل الوصول للفيديوهات.
                 </p>
               </form>
             </TabsContent>
