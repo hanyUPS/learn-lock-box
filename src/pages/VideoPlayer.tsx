@@ -12,7 +12,9 @@ interface VideoRecord {
   id: string;
   title: string;
   description: string;
-  file_path: string;
+  file_path: string | null;
+  video_url: string | null;
+  video_type: 'file' | 'url';
   status: 'processing' | 'ready' | 'disabled';
   duration_seconds: number | null;
   created_at: string;
@@ -57,18 +59,25 @@ const VideoPlayer = () => {
         throw new Error('Video not found or not available');
       }
 
-      setVideo(videoData);
+      setVideo(videoData as VideoRecord);
 
-      // Get signed URL for video playback
-      const { data: urlData, error: urlError } = await supabase.storage
-        .from('videos')
-        .createSignedUrl(videoData.file_path, 3600); // 1 hour expiry
+      // Handle video URL based on type
+      if (videoData.video_type === 'url' && videoData.video_url) {
+        setVideoUrl(videoData.video_url);
+      } else if (videoData.file_path) {
+        // Get signed URL for video playback
+        const { data: urlData, error: urlError } = await supabase.storage
+          .from('videos')
+          .createSignedUrl(videoData.file_path, 3600); // 1 hour expiry
 
-      if (urlError) {
-        throw new Error('Failed to load video');
+        if (urlError) {
+          throw new Error('Failed to load video');
+        }
+
+        setVideoUrl(urlData.signedUrl);
+      } else {
+        throw new Error('Video source not available');
       }
-
-      setVideoUrl(urlData.signedUrl);
 
     } catch (error: any) {
       console.error('Error fetching video:', error);

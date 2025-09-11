@@ -19,6 +19,8 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [videoUrl, setVideoUrl] = useState('');
+  const [uploadType, setUploadType] = useState<'file' | 'url'>('file');
   const [localDuration, setLocalDuration] = useState<number | null>(null);
   const progressIntervalRef = useRef<number | null>(null);
   const { toast } = useToast();
@@ -63,10 +65,10 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
   };
 
   const handleUpload = async () => {
-    if (!selectedFile || !title) {
+    if (!title || (uploadType === 'file' && !selectedFile) || (uploadType === 'url' && !videoUrl)) {
       toast({
-        title: 'Missing information',
-        description: 'Please select a file and provide a title',
+        title: 'معلومات مفقودة',
+        description: uploadType === 'file' ? 'يرجى اختيار ملف وإدخال العنوان' : 'يرجى إدخال رابط الفيديو والعنوان',
         variant: 'destructive',
       });
       return;
@@ -83,73 +85,101 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
     }, 400);
 
     try {
-      // First, create a video record
-      const { data: video, error: videoError } = await supabase
-        .from('videos')
-        .insert({
-          title,
-          description,
-          file_path: `videos/${Date.now()}-${selectedFile.name}`,
-          status: 'processing'
-        })
-        .select()
-        .single();
+      let videoRecord: any;
+      
+      if (uploadType === 'file') {
+        // File upload process
+        const { data: video, error: videoError } = await supabase
+          .from('videos')
+          .insert({
+            title,
+            description,
+            file_path: `videos/${Date.now()}-${selectedFile!.name}`,
+            video_type: 'file',
+            status: 'processing'
+          })
+          .select()
+          .single();
 
-      if (videoError) throw videoError;
+        if (videoError) throw videoError;
+        videoRecord = video;
 
-      // Upload file to storage
-      const filePath = `videos/${Date.now()}-${selectedFile.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from('videos')
-        .upload(filePath, selectedFile, {
-          cacheControl: '3600',
-          upsert: false,
-        });
+        // Upload file to storage
+        const filePath = `videos/${Date.now()}-${selectedFile!.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('videos')
+          .upload(filePath, selectedFile!, {
+            cacheControl: '3600',
+            upsert: false,
+          });
 
-      // Reached after upload completes successfully
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
+        if (uploadError) throw uploadError;
+
+        // Reached after upload completes successfully
+        if (progressIntervalRef.current) {
+          clearInterval(progressIntervalRef.current);
+          progressIntervalRef.current = null;
+        }
+        setUploadProgress(85);
+
+        // Update video record with final file path and duration (if known)
+        const updateData: { file_path: string; duration_seconds?: number } = { file_path: filePath };
+        if (localDuration && localDuration > 0) {
+          updateData.duration_seconds = localDuration;
+        }
+
+        const { error: updateError } = await supabase
+          .from('videos')
+          .update(updateData)
+          .eq('id', videoRecord.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // URL upload process
+        const { data: video, error: videoError } = await supabase
+          .from('videos')
+          .insert({
+            title,
+            description,
+            video_url: videoUrl,
+            video_type: 'url',
+            status: 'ready' // URL videos are immediately ready
+          })
+          .select()
+          .single();
+
+        if (videoError) throw videoError;
+        videoRecord = video;
+        setUploadProgress(85);
       }
-      setUploadProgress(85);
-
-      // Update video record with final file path and duration (if known)
-      const updateData: { file_path: string; duration_seconds?: number } = { file_path: filePath };
-      if (localDuration && localDuration > 0) {
-        updateData.duration_seconds = localDuration;
-      }
-
-      const { error: updateError } = await supabase
-        .from('videos')
-        .update(updateData)
-        .eq('id', video.id);
-
-      if (updateError) throw updateError;
 
       setUploadProgress(90);
 
-      // Process video (update metadata, generate thumbnail, etc.)
-      const { error: processError } = await supabase.functions.invoke('process-video-upload', {
-        body: {
-          videoId: video.id,
-          title,
-          description,
-        },
-      });
+      // Process video only for file uploads
+      if (uploadType === 'file') {
+        const { error: processError } = await supabase.functions.invoke('process-video-upload', {
+          body: {
+            videoId: videoRecord?.id,
+            title,
+            description,
+          },
+        });
 
-      if (processError) throw processError;
+        if (processError) throw processError;
+      }
 
       setUploadProgress(100);
 
       toast({
-        title: 'Upload successful',
-        description: 'Video has been uploaded and is now available',
+        title: 'تم الرفع بنجاح',
+        description: 'تم رفع الفيديو وهو متاح الآن',
       });
 
       // Reset form
       setTitle('');
       setDescription('');
       setSelectedFile(null);
+      setVideoUrl('');
       setLocalDuration(null);
       setUploadProgress(0);
       
@@ -161,8 +191,8 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
     } catch (error: any) {
       console.error('Upload error:', error);
       toast({
-        title: 'Upload failed',
-        description: error.message || 'An error occurred during upload',
+        title: 'فشل الرفع',
+        description: error.message || 'حدث خطأ أثناء الرفع',
         variant: 'destructive',
       });
     } finally {
@@ -179,51 +209,88 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Upload className="h-5 w-5" />
-          Upload Video
+          رفع فيديو
         </CardTitle>
         <CardDescription>
-          Upload new videos to the platform. Supported formats: MP4, MOV, AVI, WebM
+          رفع فيديوهات جديدة للمنصة. الصيغ المدعومة: MP4, MOV, AVI, WebM أو رابط خارجي
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="video-file">Video File</Label>
-          <div className="flex items-center gap-4">
-            <Input
-              id="video-file"
-              type="file"
-              accept="video/*"
-              onChange={handleFileSelect}
+        <div className="space-y-4">
+          <div className="flex gap-4">
+            <Button
+              variant={uploadType === 'file' ? 'default' : 'outline'}
+              onClick={() => setUploadType('file')}
               disabled={uploading}
               className="flex-1"
-            />
-            {selectedFile && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Video className="h-4 w-4" />
-                {selectedFile.name}
-              </div>
-            )}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              رفع ملف
+            </Button>
+            <Button
+              variant={uploadType === 'url' ? 'default' : 'outline'}
+              onClick={() => setUploadType('url')}
+              disabled={uploading}
+              className="flex-1"
+            >
+              <Video className="h-4 w-4 mr-2" />
+              رابط خارجي
+            </Button>
           </div>
+
+          {uploadType === 'file' ? (
+            <div className="space-y-2">
+              <Label htmlFor="video-file">ملف الفيديو</Label>
+              <div className="flex items-center gap-4">
+                <Input
+                  id="video-file"
+                  type="file"
+                  accept="video/*"
+                  onChange={handleFileSelect}
+                  disabled={uploading}
+                  className="flex-1"
+                />
+                {selectedFile && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Video className="h-4 w-4" />
+                    {selectedFile.name}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="video-url">رابط الفيديو</Label>
+              <Input
+                id="video-url"
+                type="url"
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://example.com/video.mp4"
+                disabled={uploading}
+              />
+            </div>
+          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="video-title">Title *</Label>
+          <Label htmlFor="video-title">العنوان *</Label>
           <Input
             id="video-title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter video title"
+            placeholder="أدخل عنوان الفيديو"
             disabled={uploading}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="video-description">Description</Label>
+          <Label htmlFor="video-description">الوصف</Label>
           <Textarea
             id="video-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Enter video description (optional)"
+            placeholder="أدخل وصف الفيديو (اختياري)"
             disabled={uploading}
             rows={3}
           />
@@ -232,7 +299,7 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
         {uploading && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span>Uploading...</span>
+              <span>{uploadType === 'file' ? 'جاري الرفع...' : 'جاري الحفظ...'}</span>
               <span>{uploadProgress}%</span>
             </div>
             <Progress value={uploadProgress} className="w-full" />
@@ -242,18 +309,18 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
         <div className="flex gap-2">
           <Button
             onClick={handleUpload}
-            disabled={!selectedFile || !title || uploading}
+            disabled={(!selectedFile && uploadType === 'file') || (!videoUrl && uploadType === 'url') || !title || uploading}
             className="flex-1"
           >
             {uploading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                Uploading...
+                {uploadType === 'file' ? 'جاري الرفع...' : 'جاري الحفظ...'}
               </>
             ) : (
               <>
                 <Upload className="h-4 w-4 mr-2" />
-                Upload Video
+                {uploadType === 'file' ? 'رفع الفيديو' : 'حفظ الرابط'}
               </>
             )}
           </Button>
@@ -262,13 +329,13 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
         <div className="bg-muted/50 rounded-lg p-4 space-y-2">
           <h4 className="font-medium flex items-center gap-2">
             <CheckCircle className="h-4 w-4 text-green-500" />
-            Upload Process
+            عملية الرفع
           </h4>
           <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• File is uploaded to secure storage</li>
-            <li>• Video metadata is automatically registered</li>
-            <li>• Video becomes available to approved students</li>
-            <li>• Thumbnail will be generated for previews</li>
+            <li>• يتم رفع الملف أو حفظ الرابط بشكل آمن</li>
+            <li>• يتم تسجيل بيانات الفيديو تلقائياً</li>
+            <li>• يصبح الفيديو متاحاً للطلاب المعتمدين</li>
+            <li>• سيتم إنشاء صورة مصغرة للمعاينة</li>
           </ul>
         </div>
       </CardContent>

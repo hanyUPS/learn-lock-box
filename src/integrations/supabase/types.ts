@@ -85,31 +85,37 @@ export type Database = {
           created_at: string
           description: string | null
           duration_seconds: number | null
-          file_path: string
+          file_path: string | null
           id: string
           status: Database["public"]["Enums"]["video_status"]
           title: string
           updated_at: string
+          video_type: string | null
+          video_url: string | null
         }
         Insert: {
           created_at?: string
           description?: string | null
           duration_seconds?: number | null
-          file_path: string
+          file_path?: string | null
           id?: string
           status?: Database["public"]["Enums"]["video_status"]
           title: string
           updated_at?: string
+          video_type?: string | null
+          video_url?: string | null
         }
         Update: {
           created_at?: string
           description?: string | null
           duration_seconds?: number | null
-          file_path?: string
+          file_path?: string | null
           id?: string
           status?: Database["public"]["Enums"]["video_status"]
           title?: string
           updated_at?: string
+          video_type?: string | null
+          video_url?: string | null
         }
         Relationships: []
       }
