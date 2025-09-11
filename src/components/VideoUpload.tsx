@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,8 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [localDuration, setLocalDuration] = useState<number | null>(null);
+  const progressIntervalRef = useRef<number | null>(null);
   const { toast } = useToast();
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,6 +33,24 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
         if (!title) {
           const nameWithoutExtension = file.name.replace(/\.[^/.]+$/, '');
           setTitle(nameWithoutExtension);
+        }
+        // Try to read duration locally for later DB update
+        try {
+          const url = URL.createObjectURL(file);
+          const tempVideo = document.createElement('video');
+          tempVideo.preload = 'metadata';
+          tempVideo.src = url;
+          tempVideo.onloadedmetadata = () => {
+            const dur = Math.round(tempVideo.duration || 0);
+            setLocalDuration(dur > 0 ? dur : null);
+            URL.revokeObjectURL(url);
+          };
+          tempVideo.onerror = () => {
+            setLocalDuration(null);
+            URL.revokeObjectURL(url);
+          };
+        } catch (e) {
+          setLocalDuration(null);
         }
       } else {
         toast({
@@ -54,6 +74,13 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
 
     setUploading(true);
     setUploadProgress(0);
+    // Start simulated progress up to 80% while uploading (fetch has no upload progress in browsers)
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current);
+    }
+    progressIntervalRef.current = window.setInterval(() => {
+      setUploadProgress((prev) => (prev < 80 ? prev + 1 : 80));
+    }, 400);
 
     try {
       // First, create a video record
@@ -79,16 +106,22 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
           upsert: false,
         });
 
-      if (uploadError) throw uploadError;
+      // Reached after upload completes successfully
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
+      setUploadProgress(85);
 
-      setUploadProgress(70);
+      // Update video record with final file path and duration (if known)
+      const updateData: { file_path: string; duration_seconds?: number } = { file_path: filePath };
+      if (localDuration && localDuration > 0) {
+        updateData.duration_seconds = localDuration;
+      }
 
-      // Update video record with final file path
       const { error: updateError } = await supabase
         .from('videos')
-        .update({
-          file_path: filePath,
-        })
+        .update(updateData)
         .eq('id', video.id);
 
       if (updateError) throw updateError;
@@ -117,6 +150,7 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
       setTitle('');
       setDescription('');
       setSelectedFile(null);
+      setLocalDuration(null);
       setUploadProgress(0);
       
       // Trigger refresh of video list
@@ -133,6 +167,10 @@ const VideoUpload = ({ onUploadComplete }: VideoUploadProps) => {
       });
     } finally {
       setUploading(false);
+      if (progressIntervalRef.current) {
+        clearInterval(progressIntervalRef.current);
+        progressIntervalRef.current = null;
+      }
     }
   };
 

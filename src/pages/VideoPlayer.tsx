@@ -147,9 +147,21 @@ const VideoPlayer = () => {
     }
   };
 
-  const handleLoadedMetadata = () => {
+  const handleLoadedMetadata = async () => {
     if (videoRef.current) {
+      const d = Math.round(videoRef.current.duration);
       setDuration(videoRef.current.duration);
+      try {
+        if (profile?.role === 'admin' && video && (!video.duration_seconds || video.duration_seconds !== d)) {
+          await supabase
+            .from('videos')
+            .update({ duration_seconds: d })
+            .eq('id', video.id);
+          setVideo({ ...video, duration_seconds: d });
+        }
+      } catch (e) {
+        console.error('Failed to update video duration', e);
+      }
     }
   };
 
