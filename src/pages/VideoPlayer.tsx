@@ -7,8 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, Play, Video, Clock, Pause, Square, SkipBack, SkipForward, Settings } from 'lucide-react';
-import ReactPlayer from 'react-player';
-const RP: any = ReactPlayer;
+// ReactPlayer removed; using iframe embeds for external URLs
 
 interface VideoRecord {
   id: string;
@@ -246,15 +245,32 @@ const VideoPlayer = () => {
               <div className="aspect-video bg-black relative">
                 {video.video_type === 'url' && (
                   <div className="w-full h-full">
-                    <RP
-                      url={videoUrl || undefined}
+                    <iframe
+                      src={(() => {
+                        try {
+                          const raw = videoUrl || '';
+                          const u = new URL(raw);
+                          const host = u.hostname.replace('www.', '');
+                          if (host.includes('youtube.com')) {
+                            const v = u.searchParams.get('v');
+                            return v ? `https://www.youtube.com/embed/${v}` : raw;
+                          }
+                          if (host === 'youtu.be') {
+                            const id = u.pathname.slice(1);
+                            return `https://www.youtube.com/embed/${id}`;
+                          }
+                          return raw;
+                        } catch {
+                          return videoUrl || '';
+                        }
+                      })()}
                       width="100%"
                       height="100%"
-                    controls
-                    onPlay={() => setIsPlaying(true)}
-                    onPause={() => setIsPlaying(false)}
-                    onDuration={(d) => setDuration(d)}
-                    config={{ youtube: { rel: 0 } }}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                      referrerPolicy="strict-origin-when-cross-origin"
+                      title={video.title}
                     />
                   </div>
                 )}
