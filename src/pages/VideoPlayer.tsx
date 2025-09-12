@@ -64,7 +64,7 @@ const VideoPlayer = () => {
       // Handle video URL based on type
       if (videoData.video_type === 'url' && videoData.video_url) {
         setVideoUrl(videoData.video_url);
-      } else if (videoData.file_path) {
+      } else if (videoData.video_type === 'file' && videoData.file_path) {
         // Get signed URL for video playback
         const { data: urlData, error: urlError } = await supabase.storage
           .from('videos')
