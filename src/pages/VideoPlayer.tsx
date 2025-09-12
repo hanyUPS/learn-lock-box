@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, Play, Video, Clock, Pause, Square, SkipBack, SkipForward, Settings } from 'lucide-react';
 
+
 interface VideoRecord {
   id: string;
   title: string;
@@ -242,10 +243,25 @@ const VideoPlayer = () => {
           <div className="lg:col-span-3">
             <Card className="overflow-hidden card-shadow">
               <div className="aspect-video bg-black relative">
-                <video
-                  ref={videoRef}
-                  src={videoUrl}
-                  controls={false}
+                {video.video_type === 'url' && (
+                  <div className="w-full h-full">
+                    <ReactPlayer
+                      url={videoUrl || undefined}
+                      width="100%"
+                      height="100%"
+                    controls
+                    onPlay={() => setIsPlaying(true)}
+                    onPause={() => setIsPlaying(false)}
+                    onDuration={(d) => setDuration(d)}
+                    config={{ youtube: { rel: 0 } }}
+                    />
+                  </div>
+                )}
+                {video.video_type !== 'url' && (
+                  <video
+                    ref={videoRef}
+                    src={videoUrl}
+                    controls={false}
                   className="w-full h-full"
                   poster="/placeholder.svg"
                   preload="metadata"
@@ -257,6 +273,7 @@ const VideoPlayer = () => {
                     متصفحك لا يدعم تشغيل HTML5 للفيديو.
                   </p>
                 </video>
+                )}
                 <div className="absolute top-4 left-4">
                   <Badge variant="secondary" className="bg-black/50 text-white border-white/20">
                     <Play className="h-3 w-3 ml-1" />
