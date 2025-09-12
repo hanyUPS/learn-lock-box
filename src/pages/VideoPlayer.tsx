@@ -7,7 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ArrowLeft, Play, Video, Clock, Pause, Square, SkipBack, SkipForward, Settings } from 'lucide-react';
-
+import ReactPlayer from 'react-player';
+const RP: any = ReactPlayer;
 
 interface VideoRecord {
   id: string;
@@ -245,7 +246,7 @@ const VideoPlayer = () => {
               <div className="aspect-video bg-black relative">
                 {video.video_type === 'url' && (
                   <div className="w-full h-full">
-                    <ReactPlayer
+                    <RP
                       url={videoUrl || undefined}
                       width="100%"
                       height="100%"
