@@ -14,6 +14,113 @@ export type Database = {
   }
   public: {
     Tables: {
+      course_passwords: {
+        Row: {
+          course_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          password: string
+          used: boolean
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          password: string
+          used?: boolean
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          password?: string
+          used?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_passwords_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      course_videos: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          order_index: number
+          video_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          video_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_videos_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_videos_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courses: {
+        Row: {
+          created_at: string
+          description: string | null
+          duration_months: number
+          id: string
+          is_active: boolean
+          price: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          duration_months?: number
+          id?: string
+          is_active?: boolean
+          price?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          duration_months?: number
+          id?: string
+          is_active?: boolean
+          price?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           approved: boolean
@@ -43,6 +150,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          course_id: string
+          created_at: string
+          end_date: string | null
+          id: string
+          payment_proof: string | null
+          start_date: string | null
+          status: Database["public"]["Enums"]["subscription_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          payment_proof?: string | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          payment_proof?: string | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       video_access: {
         Row: {
@@ -124,6 +275,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_subscription_expiry: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
@@ -131,6 +286,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "student"
+      subscription_status: "pending" | "active" | "expired"
       video_status: "processing" | "ready" | "disabled"
     }
     CompositeTypes: {
@@ -260,6 +416,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "student"],
+      subscription_status: ["pending", "active", "expired"],
       video_status: ["processing", "ready", "disabled"],
     },
   },
