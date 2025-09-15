@@ -4,156 +4,228 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Play, Clock, Video } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { BookOpen, Clock, DollarSign, GraduationCap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-interface VideoRecord {
+interface Course {
   id: string;
   title: string;
   description: string;
-  file_path: string;
-  status: 'processing' | 'ready' | 'disabled';
-  duration_seconds: number | null;
+  price: number;
+  duration_months: number;
+  is_active: boolean;
   created_at: string;
 }
 
+interface UserSubscription {
+  id: string;
+  course_id: string;
+  status: 'pending' | 'active' | 'expired';
+  start_date: string | null;
+  end_date: string | null;
+}
+
 const StudentDashboard = () => {
-  const [videos, setVideos] = useState<VideoRecord[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [subscriptions, setSubscriptions] = useState<UserSubscription[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchVideos();
-  }, []);
-
-  const fetchVideos = async () => {
-    const { data, error } = await supabase
-      .from('videos')
-      .select('*')
-      .eq('status', 'ready')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      toast({
-        title: 'خطأ',
-        description: 'فشل في تحميل الفيديوهات',
-        variant: 'destructive',
-      });
-    } else {
-      setVideos(data || []);
+    fetchCourses();
+    if (user) {
+      fetchUserSubscriptions();
     }
-    setLoading(false);
+  }, [user]);
+
+  const fetchCourses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setCourses(data || []);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      toast({
+        title: "خطأ",
+        description: "فشل في تحميل الكورسات",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const formatDuration = (seconds: number | null) => {
-    if (!seconds) return 'غير محدد';
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const fetchUserSubscriptions = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setSubscriptions(data || []);
+    } catch (error) {
+      console.error('Error fetching subscriptions:', error);
+    }
   };
 
-  const handlePlayVideo = (videoId: string) => {
-    navigate(`/video/${videoId}`);
+  const getSubscriptionStatus = (courseId: string) => {
+    const subscription = subscriptions.find(s => s.course_id === courseId);
+    if (!subscription) return null;
+    
+    if (subscription.status === 'active' && subscription.end_date) {
+      const endDate = new Date(subscription.end_date);
+      if (endDate > new Date()) {
+        return { status: 'active', endDate };
+      } else {
+        return { status: 'expired' };
+      }
+    }
+    
+    return { status: subscription.status };
   };
 
   if (loading) {
     return <div className="text-center">جاري التحميل...</div>;
   }
 
+  const activeCourses = courses.filter(course => {
+    const subscriptionStatus = getSubscriptionStatus(course.id);
+    return subscriptionStatus?.status === 'active';
+  });
+
+  const pendingCourses = courses.filter(course => {
+    const subscriptionStatus = getSubscriptionStatus(course.id);
+    return subscriptionStatus?.status === 'pending';
+  });
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="card-shadow hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">الفيديوهات المتاحة</CardTitle>
-            <Video className="h-4 w-4 text-primary" />
+            <CardTitle className="text-sm font-medium">الكورسات المتاحة</CardTitle>
+            <BookOpen className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">{videos.length}</div>
+            <div className="text-2xl font-bold text-primary">{courses.length}</div>
           </CardContent>
         </Card>
         
         <Card className="card-shadow hover-lift">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">إجمالي المدة</CardTitle>
+            <CardTitle className="text-sm font-medium">اشتراكاتي النشطة</CardTitle>
+            <GraduationCap className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-primary">{activeCourses.length}</div>
+          </CardContent>
+        </Card>
+        
+        <Card className="card-shadow hover-lift">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">في الانتظار</CardTitle>
             <Clock className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">
-              {Math.floor(videos.reduce((acc, video) => acc + (video.duration_seconds || 0), 0) / 60)} دقيقة
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="card-shadow hover-lift">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">المضاف حديثاً</CardTitle>
-            <Play className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">
-              {videos.filter(v => {
-                const videoDate = new Date(v.created_at);
-                const weekAgo = new Date();
-                weekAgo.setDate(weekAgo.getDate() - 7);
-                return videoDate > weekAgo;
-              }).length}
-            </div>
+            <div className="text-2xl font-bold text-primary">{pendingCourses.length}</div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Active Courses */}
+      {activeCourses.length > 0 && (
+        <Card className="card-shadow">
+          <CardHeader>
+            <CardTitle className="text-xl">كورساتي النشطة</CardTitle>
+            <CardDescription>
+              الكورسات التي لديك اشتراك نشط بها
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {activeCourses.map((course) => {
+                const subscriptionStatus = getSubscriptionStatus(course.id);
+                
+                return (
+                  <Card key={course.id} className="overflow-hidden hover-lift border-0 shadow-md">
+                    <div className="aspect-video bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center">
+                      <BookOpen className="h-12 w-12 text-primary" />
+                    </div>
+                    <CardContent className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
+                          <h3 className="font-semibold text-foreground line-clamp-2">{course.title}</h3>
+                          <Badge variant="default">مفعل</Badge>
+                        </div>
+                        {course.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {course.description}
+                          </p>
+                        )}
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="h-4 w-4" />
+                            <span>{course.price ? `${course.price} ريال` : 'مجاني'}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                            <span>{course.duration_months} {course.duration_months === 1 ? 'شهر' : 'أشهر'}</span>
+                          </div>
+                        </div>
+                        {subscriptionStatus?.endDate && (
+                          <p className="text-xs text-muted-foreground">
+                            ينتهي في: {new Date(subscriptionStatus.endDate).toLocaleDateString('ar-SA')}
+                          </p>
+                        )}
+                        <Button 
+                          className="w-full"
+                          onClick={() => navigate(`/course/${course.id}`)}
+                        >
+                          دخول الكورس
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Browse All Courses */}
       <Card className="card-shadow">
         <CardHeader>
-          <CardTitle className="text-xl">مكتبة الفيديوهات</CardTitle>
+          <CardTitle className="text-xl">تصفح جميع الكورسات</CardTitle>
           <CardDescription>
-            اصل إلى المحتوى التعليمي المعتمد
+            اكتشف واشترك في الكورسات المتاحة
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {videos.length === 0 ? (
-            <div className="text-center py-12">
-              <Video className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground text-lg mb-2">لا توجد فيديوهات متاحة حالياً.</p>
-              <p className="text-sm text-muted-foreground">
-                تحقق لاحقاً من المحتوى الجديد.
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {videos.map((video) => (
-                <Card key={video.id} className="overflow-hidden hover-lift border-0 shadow-md">
-                  <div className="aspect-video bg-gradient-to-br from-primary/10 to-primary/20 flex items-center justify-center">
-                    <Video className="h-12 w-12 text-primary" />
-                  </div>
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
-                      <h3 className="font-semibold text-foreground line-clamp-2">{video.title}</h3>
-                      {video.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {video.description}
-                        </p>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="bg-accent text-accent-foreground">
-                          {formatDuration(video.duration_seconds)}
-                        </Badge>
-                        <Button 
-                          size="sm" 
-                          onClick={() => handlePlayVideo(video.id)}
-                          className="flex items-center gap-1 hover-lift"
-                        >
-                          <Play className="h-3 w-3" />
-                          تشغيل
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+          <div className="text-center py-8">
+            <BookOpen className="h-16 w-16 text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground text-lg mb-4">
+              استكشف مكتبتنا الشاملة من الكورسات التعليمية
+            </p>
+            <Button 
+              size="lg"
+              onClick={() => navigate('/courses')}
+              className="hover-lift"
+            >
+              تصفح الكورسات
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
