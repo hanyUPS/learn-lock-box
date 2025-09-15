@@ -44,18 +44,57 @@ const AdminSubscriptionManagement = () => {
 
   const fetchSubscriptions = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch subscriptions first
+      const { data: subscriptionsData, error: subscriptionsError } = await supabase
         .from('subscriptions')
-        .select(`
-          *,
-          profiles:profiles!inner (email, role),
-          courses:courses!inner (title, duration_months)
-        `)
-        .order('created_at', { ascending: false })
-        .returns<Subscription[]>();
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      setSubscriptions(data || []);
+      if (subscriptionsError) throw subscriptionsError;
+      if (!subscriptionsData) {
+        setSubscriptions([]);
+        return;
+      }
+
+      // Get unique user IDs and course IDs
+      const userIds = [...new Set(subscriptionsData.map(sub => sub.user_id))];
+      const courseIds = [...new Set(subscriptionsData.map(sub => sub.course_id))];
+
+      // Fetch profiles
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, email, role')
+        .in('user_id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Fetch courses
+      const { data: coursesData, error: coursesError } = await supabase
+        .from('courses')
+        .select('id, title, duration_months')
+        .in('id', courseIds);
+
+      if (coursesError) throw coursesError;
+
+      // Combine data
+      const combinedData = subscriptionsData.map(subscription => {
+        const profile = profilesData?.find(p => p.user_id === subscription.user_id);
+        const course = coursesData?.find(c => c.id === subscription.course_id);
+        
+        return {
+          ...subscription,
+          profiles: {
+            email: profile?.email || 'غير معروف',
+            role: profile?.role || 'student'
+          },
+          courses: {
+            title: course?.title || 'غير معروف',
+            duration_months: course?.duration_months || 1
+          }
+        };
+      });
+
+      setSubscriptions(combinedData as Subscription[]);
     } catch (error) {
       console.error('Error fetching subscriptions:', error);
       toast({
