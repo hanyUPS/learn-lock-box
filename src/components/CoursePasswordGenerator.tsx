@@ -58,11 +58,12 @@ const CoursePasswordGenerator = () => {
         .from('course_passwords')
         .select(`
           *,
-          courses!inner (title)
+          course:courses!inner (title)
         `)
         .eq('used', false)
         .gt('expires_at', new Date().toISOString())
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .returns<CoursePassword[]>();
 
       if (error) throw error;
       setPasswords(data || []);

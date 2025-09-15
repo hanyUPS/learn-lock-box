@@ -48,10 +48,11 @@ const AdminSubscriptionManagement = () => {
         .from('subscriptions')
         .select(`
           *,
-          profiles!inner (email, role),
-          courses!inner (title, duration_months)
+          profiles:profiles!inner (email, role),
+          courses:courses!inner (title, duration_months)
         `)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .returns<Subscription[]>();
 
       if (error) throw error;
       setSubscriptions(data || []);
