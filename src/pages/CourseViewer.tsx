@@ -7,7 +7,8 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Play, Clock, CheckCircle } from 'lucide-react';
+import { Play, Clock, CheckCircle } from 'lucide-react';
+import NavigationHeader from '@/components/NavigationHeader';
 import { Link } from 'react-router-dom';
 
 interface Course {
@@ -191,33 +192,22 @@ const CourseViewer = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link to="/courses">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="h-4 w-4 ml-2" />
-                  العودة للكورسات
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-xl font-bold text-primary">{course.title}</h1>
-                <p className="text-sm text-muted-foreground">{course.description}</p>
-              </div>
-            </div>
-            
-            <div className="text-left">
-              <Badge variant={daysRemaining > 7 ? 'default' : 'destructive'}>
-                {daysRemaining > 0 ? `${daysRemaining} يوم متبقي` : 'انتهى الاشتراك'}
-              </Badge>
-              <p className="text-xs text-muted-foreground mt-1">
-                ينتهي في: {new Date(subscription.end_date).toLocaleDateString('ar-SA')}
-              </p>
-            </div>
-          </div>
+      <NavigationHeader 
+        title={course.title}
+        subtitle={course.description}
+        showBackButton={true}
+        backTo="/courses"
+        backLabel="العودة للكورسات"
+      >
+        <div className="text-left">
+          <Badge variant={daysRemaining > 7 ? 'default' : 'destructive'}>
+            {daysRemaining > 0 ? `${daysRemaining} يوم متبقي` : 'انتهى الاشتراك'}
+          </Badge>
+          <p className="text-xs text-muted-foreground mt-1">
+            ينتهي في: {new Date(subscription.end_date).toLocaleDateString('ar-SA')}
+          </p>
         </div>
-      </header>
+      </NavigationHeader>
 
       <main className="container mx-auto px-4 py-8">
         {courseVideos.length === 0 ? (

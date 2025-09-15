@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Play, Video, Clock, Pause, Square, SkipBack, SkipForward, Settings } from 'lucide-react';
+import { Play, Video, Clock, Pause, Square, SkipBack, SkipForward, Settings } from 'lucide-react';
+import NavigationHeader from '@/components/NavigationHeader';
 // ReactPlayer removed; using iframe embeds for external URLs
 
 interface VideoRecord {
@@ -205,8 +206,7 @@ const VideoPlayer = () => {
           </CardHeader>
           <CardContent className="text-center">
             <Button onClick={() => navigate('/')} variant="outline" className="hover-lift">
-              <ArrowLeft className="h-4 w-4 ml-2" />
-              العودة للوحة الإدارة
+              العودة للرئيسية
             </Button>
           </CardContent>
         </Card>
@@ -216,27 +216,13 @@ const VideoPlayer = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 hover-lift"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            العودة للوحة الإدارة
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-lg font-semibold text-primary">{video.title}</h1>
-            {profile && (
-              <p className="text-sm text-muted-foreground">
-                يشاهد: {profile.email}
-              </p>
-            )}
-          </div>
-        </div>
-      </header>
+      <NavigationHeader 
+        title={video.title}
+        subtitle={profile ? `يشاهد: ${profile.email}` : ''}
+        showBackButton={true}
+        backTo="/"
+        backLabel="العودة للرئيسية"
+      />
 
       <main className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">

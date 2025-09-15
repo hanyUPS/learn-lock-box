@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Clock, DollarSign, BookOpen, ArrowRight } from 'lucide-react';
+import NavigationHeader from '@/components/NavigationHeader';
 import { Link, useNavigate } from 'react-router-dom';
 
 interface Course {
@@ -126,25 +127,13 @@ const Courses = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card border-b shadow-sm">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <Button 
-              variant="ghost" 
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2"
-            >
-              <ArrowRight className="h-4 w-4" />
-              العودة
-            </Button>
-            <div className="text-center flex-1">
-              <h1 className="text-3xl font-bold text-primary mb-2">الكورسات التعليمية</h1>
-              <p className="text-muted-foreground">اختر الكورس المناسب لك وابدأ رحلة التعلم</p>
-            </div>
-            <div className="w-20"></div> {/* Spacer for centering */}
-          </div>
-        </div>
-      </header>
+      <NavigationHeader 
+        title="الكورسات التعليمية"
+        subtitle="اختر الكورس المناسب لك وابدأ رحلة التعلم"
+        showBackButton={true}
+        backTo="/"
+        backLabel="العودة للوحة التحكم"
+      />
 
       <main className="container mx-auto px-4 py-8">
         {courses.length === 0 ? (

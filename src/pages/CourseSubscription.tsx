@@ -9,7 +9,8 @@ import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, MessageCircle, Upload, Eye, EyeOff } from 'lucide-react';
+import { MessageCircle, Upload, Eye, EyeOff } from 'lucide-react';
+import NavigationHeader from '@/components/NavigationHeader';
 import { Link } from 'react-router-dom';
 
 interface Course {
@@ -217,22 +218,13 @@ const CourseSubscription = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-card border-b shadow-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Link to="/courses">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 ml-2" />
-                العودة للكورسات
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-xl font-bold text-primary">الاشتراك في الكورس</h1>
-              <p className="text-sm text-muted-foreground">{course.title}</p>
-            </div>
-          </div>
-        </div>
-      </header>
+      <NavigationHeader 
+        title="الاشتراك في الكورس"
+        subtitle={course.title}
+        showBackButton={true}
+        backTo="/courses"
+        backLabel="العودة للكورسات"
+      />
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         <Card className="mb-6">
