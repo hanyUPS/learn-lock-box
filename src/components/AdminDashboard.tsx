@@ -8,6 +8,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Users, Video, Upload, Shield, Settings, CheckCircle } from 'lucide-react';
 import VideoUpload from '@/components/VideoUpload';
 import VideoManagement from '@/components/VideoManagement';
+import AdminCourseManagement from '@/components/AdminCourseManagement';
+import AdminSubscriptionManagement from '@/components/AdminSubscriptionManagement';
+import CoursePasswordGenerator from '@/components/CoursePasswordGenerator';
 
 interface Profile {
   id: string;
@@ -198,10 +201,10 @@ const AdminDashboard = () => {
       </div>
 
       <Tabs defaultValue="users" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            إدارة المستخدمين
+            المستخدمين
           </TabsTrigger>
           <TabsTrigger value="upload" className="flex items-center gap-2">
             <Upload className="h-4 w-4" />
@@ -210,6 +213,18 @@ const AdminDashboard = () => {
           <TabsTrigger value="manage" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             إدارة الفيديوهات
+          </TabsTrigger>
+          <TabsTrigger value="courses" className="flex items-center gap-2">
+            <Video className="h-4 w-4" />
+            إدارة الكورسات
+          </TabsTrigger>
+          <TabsTrigger value="subscriptions" className="flex items-center gap-2">
+            <Shield className="h-4 w-4" />
+            الاشتراكات
+          </TabsTrigger>
+          <TabsTrigger value="passwords" className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" />
+            كلمات المرور
           </TabsTrigger>
         </TabsList>
         
@@ -271,6 +286,18 @@ const AdminDashboard = () => {
 
         <TabsContent value="manage" className="space-y-4">
           <VideoManagement refreshTrigger={refreshTrigger} />
+        </TabsContent>
+
+        <TabsContent value="courses" className="space-y-4">
+          <AdminCourseManagement />
+        </TabsContent>
+
+        <TabsContent value="subscriptions" className="space-y-4">
+          <AdminSubscriptionManagement />
+        </TabsContent>
+
+        <TabsContent value="passwords" className="space-y-4">
+          <CoursePasswordGenerator />
         </TabsContent>
       </Tabs>
     </div>

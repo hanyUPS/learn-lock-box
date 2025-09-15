@@ -50,6 +50,16 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-primary">منصة التعلم الآمنة</h1>
           <div className="flex items-center gap-4">
+            {profile.role === 'student' && profile.approved && (
+              <Button
+                onClick={() => window.location.href = '/courses'}
+                variant="outline"
+                size="sm"
+                className="hover-lift"
+              >
+                تصفح الكورسات
+              </Button>
+            )}
             <div className="text-left">
               <span className="text-sm font-medium text-foreground block">{profile.email}</span>
               <span className="text-xs text-muted-foreground">
